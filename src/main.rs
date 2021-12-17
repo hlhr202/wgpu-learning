@@ -1,9 +1,11 @@
+mod state;
+mod vertex;
+
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
-mod state;
 use state::State;
 
 fn main() {
