@@ -24,17 +24,17 @@ impl State {
         let instance = wgpu::Instance::new(wgpu::Backends::all());
         let surface = unsafe { instance.create_surface(window) };
         let adapter = instance
-            .enumerate_adapters(wgpu::Backends::all())
-            .filter(|adapter| {
-                // Check if this adapter supports our surface
-                surface.get_preferred_format(&adapter).is_some()
+            .request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::HighPerformance,
+                compatible_surface: Some(&surface),
+                force_fallback_adapter: false,
             })
-            .next()
+            .await
             .unwrap();
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
-                    features: wgpu::Features::POLYGON_MODE_LINE,
+                    features: wgpu::Features::empty(),
                     limits: wgpu::Limits::default(),
                     label: None,
                 },
@@ -90,7 +90,7 @@ impl State {
                 front_face: wgpu::FrontFace::Ccw, // 2.
                 cull_mode: Some(wgpu::Face::Back),
                 // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
-                polygon_mode: wgpu::PolygonMode::Line,
+                polygon_mode: wgpu::PolygonMode::Fill,
                 // Requires Features::DEPTH_CLAMPING
                 clamp_depth: false,
                 // Requires Features::CONSERVATIVE_RASTERIZATION
