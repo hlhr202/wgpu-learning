@@ -1,5 +1,6 @@
 mod state;
 mod vertex;
+mod shape;
 
 use winit::{
     event::*,
@@ -24,7 +25,9 @@ fn main() {
                 // The system is out of memory, we should probably quit
                 Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
                 // All other errors (Outdated, Timeout) should be resolved by the next frame
-                Err(e) => eprintln!("{:?}", e),
+                Err(_e) =>  {
+                    // eprintln!("{:?}", e) // print Outdated
+                },
             }
         }
         Event::MainEventsCleared => {

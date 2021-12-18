@@ -1,6 +1,6 @@
 // main.rs
-use crate::vertex::{Vertex, VERTICES};
-use wgpu::util::DeviceExt;
+use crate::shape::{quad::QuadBuffer, triangle::TriangleBuffer};
+use crate::vertex::Vertex;
 use winit::{event::WindowEvent, window::Window};
 
 pub struct State {
@@ -9,9 +9,8 @@ pub struct State {
     device: wgpu::Device,
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
-    render_pipeline: wgpu::RenderPipeline,
-    vertex_buffer: wgpu::Buffer,
-    num_vertices: u32,
+    triangle_buffer: TriangleBuffer,
+    quad_bufeer: QuadBuffer,
 }
 
 impl State {
@@ -49,62 +48,11 @@ impl State {
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
         };
-        surface.configure(&device, &config);
-        let shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
-            label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
-        });
-        let render_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[],
-                push_constant_ranges: &[],
-            });
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(VERTICES),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
-            layout: Some(&render_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &shader,
-                entry_point: "vs_main",     // 1.
-                buffers: &[Vertex::desc()], // 2.
-            },
-            fragment: Some(wgpu::FragmentState {
-                // 3.
-                module: &shader,
-                entry_point: "fs_main",
-                targets: &[wgpu::ColorTargetState {
-                    // 4.
-                    format: config.format,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL,
-                }],
-            }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList, // 1.
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw, // 2.
-                cull_mode: Some(wgpu::Face::Back),
-                // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
-                polygon_mode: wgpu::PolygonMode::Fill,
-                // Requires Features::DEPTH_CLAMPING
-                clamp_depth: false,
-                // Requires Features::CONSERVATIVE_RASTERIZATION
-                conservative: false,
-            },
-            depth_stencil: None, // 1.
-            multisample: wgpu::MultisampleState {
-                count: 1,                         // 2.
-                mask: !0,                         // 3.
-                alpha_to_coverage_enabled: false, // 4.
-            },
-        });
 
-        let num_vertices: u32 = VERTICES.len().try_into().unwrap();
+        surface.configure(&device, &config);
+
+        let triangle_buffer = TriangleBuffer::new(&device, &config);
+        let quad_bufeer = QuadBuffer::new(&device, &config);
 
         Self {
             surface,
@@ -112,9 +60,8 @@ impl State {
             queue,
             config,
             size,
-            render_pipeline,
-            vertex_buffer,
-            num_vertices,
+            triangle_buffer,
+            quad_bufeer,
         }
     }
 
@@ -131,42 +78,55 @@ impl State {
         false
     }
 
-    pub fn update(&mut self) {}
+    pub fn update(&mut self) {
+        self.triangle_buffer.push(&[
+            Vertex {
+                position: [0.0, 1.0, 0.0],
+                color: [1.0, 0.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: [-1.0, -1.0, 0.0],
+                color: [0.0, 1.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: [1.0, -1.0, 0.0],
+                color: [0.0, 0.0, 1.0, 1.0],
+            },
+        ]);
+
+        self.quad_bufeer.push(&[
+            Vertex {
+                position: [-0.5, -0.5, 0.0],
+                color: [1.0, 0.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: [0.5, -0.5, 0.0],
+                color: [0.0, 1.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: [0.5, 0.5, 0.0],
+                color: [0.0, 0.0, 1.0, 1.0],
+            },
+            Vertex {
+                position: [-0.5, 0.5, 0.0],
+                color: [1.0, 1.0, 1.0, 1.0],
+            },
+        ]);
+    }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Triangle Render Encoder"),
+            });
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("Render Encoder"),
-            });
-        {
-            // 1.
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Render Pass"),
-                color_attachments: &[wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.0,
-                            g: 0.0,
-                            b: 0.0,
-                            a: 1.0,
-                        }),
-                        store: true,
-                    },
-                }],
-                depth_stencil_attachment: None,
-            });
 
-            render_pass.set_pipeline(&self.render_pipeline); // 2.
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.draw(0..self.num_vertices, 0..1); // 3.
-        }
+        self.triangle_buffer.draw(&self.device, &view, &mut encoder);
+        self.quad_bufeer.draw(&self.device, &view, &mut encoder);
 
         // submit will accept anything that implements IntoIter
         self.queue.submit(std::iter::once(encoder.finish()));
