@@ -72,19 +72,19 @@ impl State {
         quad_bufeer.push(&[
             Vertex {
                 position: [-0.5, -0.5, 0.0],
-                color: [1.0, 0.0, 0.0, 1.0],
+                color: [1.0, 0.0, 0.0, 0.5],
             },
             Vertex {
                 position: [0.5, -0.5, 0.0],
-                color: [0.0, 1.0, 0.0, 1.0],
+                color: [0.0, 1.0, 0.0, 0.5],
             },
             Vertex {
                 position: [0.5, 0.5, 0.0],
-                color: [0.0, 0.0, 1.0, 1.0],
+                color: [0.0, 0.0, 1.0, 0.5],
             },
             Vertex {
                 position: [-0.5, 0.5, 0.0],
-                color: [1.0, 1.0, 1.0, 1.0],
+                color: [1.0, 1.0, 1.0, 0.5],
             },
         ]);
 
@@ -112,9 +112,7 @@ impl State {
         false
     }
 
-    pub fn update(&mut self) {
-        
-    }
+    pub fn update(&mut self) {}
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
@@ -126,7 +124,7 @@ impl State {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Triangle Render Encoder"),
             });
-            
+
         self.triangle_buffer.draw(&self.device, &view, &mut encoder);
         self.quad_bufeer.draw(&self.device, &view, &mut encoder);
 
