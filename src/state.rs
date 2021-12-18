@@ -51,8 +51,42 @@ impl State {
 
         surface.configure(&device, &config);
 
-        let triangle_buffer = TriangleBuffer::new(&device, &config);
-        let quad_bufeer = QuadBuffer::new(&device, &config);
+        let mut triangle_buffer = TriangleBuffer::new(&device, &config);
+        let mut quad_bufeer = QuadBuffer::new(&device, &config);
+
+        triangle_buffer.push(&[
+            Vertex {
+                position: [0.0, 1.0, 0.0],
+                color: [1.0, 0.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: [-1.0, -1.0, 0.0],
+                color: [0.0, 1.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: [1.0, -1.0, 0.0],
+                color: [0.0, 0.0, 1.0, 1.0],
+            },
+        ]);
+
+        quad_bufeer.push(&[
+            Vertex {
+                position: [-0.5, -0.5, 0.0],
+                color: [1.0, 0.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: [0.5, -0.5, 0.0],
+                color: [0.0, 1.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: [0.5, 0.5, 0.0],
+                color: [0.0, 0.0, 1.0, 1.0],
+            },
+            Vertex {
+                position: [-0.5, 0.5, 0.0],
+                color: [1.0, 1.0, 1.0, 1.0],
+            },
+        ]);
 
         Self {
             surface,
@@ -79,39 +113,7 @@ impl State {
     }
 
     pub fn update(&mut self) {
-        self.triangle_buffer.push(&[
-            Vertex {
-                position: [0.0, 1.0, 0.0],
-                color: [1.0, 0.0, 0.0, 1.0],
-            },
-            Vertex {
-                position: [-1.0, -1.0, 0.0],
-                color: [0.0, 1.0, 0.0, 1.0],
-            },
-            Vertex {
-                position: [1.0, -1.0, 0.0],
-                color: [0.0, 0.0, 1.0, 1.0],
-            },
-        ]);
-
-        self.quad_bufeer.push(&[
-            Vertex {
-                position: [-0.5, -0.5, 0.0],
-                color: [1.0, 0.0, 0.0, 1.0],
-            },
-            Vertex {
-                position: [0.5, -0.5, 0.0],
-                color: [0.0, 1.0, 0.0, 1.0],
-            },
-            Vertex {
-                position: [0.5, 0.5, 0.0],
-                color: [0.0, 0.0, 1.0, 1.0],
-            },
-            Vertex {
-                position: [-0.5, 0.5, 0.0],
-                color: [1.0, 1.0, 1.0, 1.0],
-            },
-        ]);
+        
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
