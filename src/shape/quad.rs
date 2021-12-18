@@ -114,6 +114,7 @@ impl QuadBuffer {
         render_pass.set_pipeline(&self.pipeline); // 2.
         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-        render_pass.draw_indexed(0..self.indices.len().try_into().unwrap(), 0, 0..1); // 3.
+        render_pass.draw_indexed(0..self.indices.len().try_into().unwrap(), 0, 0..1);
+        // 3.
     }
 }

@@ -117,16 +117,16 @@ impl State {
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+        let output = self.surface.get_current_texture()?;
+        let view = output
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Triangle Render Encoder"),
             });
-        let output = self.surface.get_current_texture()?;
-        let view = output
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
-
+            
         self.triangle_buffer.draw(&self.device, &view, &mut encoder);
         self.quad_bufeer.draw(&self.device, &view, &mut encoder);
 
